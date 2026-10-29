@@ -3,6 +3,10 @@
 Catches the boring mistakes that otherwise look like agent failures:
 duplicate case ids, empty inputs, tool expectations without a name,
 judge thresholds outside 0..1, traces that match no case.
+
+Enhancement (v0.3): validate_traces now also checks trace field *types*
+so that ``"latency_ms": "fast"`` or ``"escalated": "yes"`` are caught
+before they silently corrupt scoring metrics.
 """
 from __future__ import annotations
 
@@ -43,12 +47,79 @@ def validate_cases(raw_cases: list[dict], cases: list[dict]) -> list[str]:
     return issues
 
 
+def _validate_trace_schema(trace: dict) -> list[str]:
+    """Validate the types of fields in a single normalised trace.
+
+    Returns a list of human-readable issue strings (empty = valid).
+    """
+    issues = []
+    tid = trace.get("id") or trace.get("input") or "<unknown>"
+
+    latency = trace.get("latency_ms")
+    if latency is not None and not isinstance(latency, (int, float)):
+        issues.append(
+            f"trace {tid!r}: latency_ms must be a number, "
+            f"got {type(latency).__name__!r} ({latency!r})"
+        )
+
+    cost = trace.get("cost_usd")
+    if cost is not None and not isinstance(cost, (int, float)):
+        issues.append(
+            f"trace {tid!r}: cost_usd must be a number, "
+            f"got {type(cost).__name__!r} ({cost!r})"
+        )
+
+    escalated = trace.get("escalated")
+    if escalated is not None and not isinstance(escalated, bool):
+        issues.append(
+            f"trace {tid!r}: escalated must be a boolean (true/false), "
+            f"got {type(escalated).__name__!r} ({escalated!r})"
+        )
+
+    tools = trace.get("tools")
+    if tools is not None:
+        if not isinstance(tools, list):
+            issues.append(
+                f"trace {tid!r}: tools must be a list, got {type(tools).__name__!r}"
+            )
+        else:
+            for i, tool in enumerate(tools):
+                if not isinstance(tool, dict):
+                    issues.append(
+                        f"trace {tid!r}: tools[{i}] must be a dict, "
+                        f"got {type(tool).__name__!r}"
+                    )
+                    continue
+                if not isinstance(tool.get("name", ""), str):
+                    issues.append(f"trace {tid!r}: tools[{i}].name must be a string")
+                args = tool.get("args")
+                if args is not None and not isinstance(args, dict):
+                    issues.append(
+                        f"trace {tid!r}: tools[{i}].args must be a dict or null, "
+                        f"got {type(args).__name__!r}"
+                    )
+
+    judge_score = trace.get("judge_score")
+    if judge_score is not None and not isinstance(judge_score, (int, float)):
+        issues.append(
+            f"trace {tid!r}: judge_score must be a number, "
+            f"got {type(judge_score).__name__!r}"
+        )
+    elif judge_score is not None and not (0.0 <= float(judge_score) <= 1.0):
+        issues.append(f"trace {tid!r}: judge_score {judge_score} is outside [0, 1]")
+
+    return issues
+
+
 def validate_traces(cases: list[dict], traces: list[dict]) -> list[str]:
     issues = []
     case_ids = {c["id"] for c in cases}
     case_inputs = {c["input"] for c in cases}
     matched = set()
     for t in traces:
+        # Schema / type validation (new in v0.3)
+        issues.extend(_validate_trace_schema(t))
+
         key = t.get("id") or t.get("input")
         if t.get("id") and t["id"] in case_ids:
             matched.add(t["id"])

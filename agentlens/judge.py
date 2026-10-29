@@ -25,6 +25,8 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
+import urllib.error
 import urllib.request
 
 _STOPWORDS = {
@@ -80,16 +82,37 @@ class OpenAICompatibleJudge:
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0,
         }
-        req = urllib.request.Request(
-            f"{self.endpoint}/chat/completions",
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        if self.api_key:
-            req.add_header("Authorization", f"Bearer {self.api_key}")
-        with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
+        req_body = json.dumps(payload).encode("utf-8")
+
+        last_exc: Exception | None = None
+        for attempt in range(1, 4):  # up to 3 attempts
+            req = urllib.request.Request(
+                f"{self.endpoint}/chat/completions",
+                data=req_body,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            if self.api_key:
+                req.add_header("Authorization", f"Bearer {self.api_key}")
+            try:
+                with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                break  # success — exit retry loop
+            except urllib.error.HTTPError as exc:
+                last_exc = exc
+                if exc.code in (429, 500, 502, 503, 504) and attempt < 3:
+                    time.sleep(2 ** attempt)  # 2s, 4s back-off
+                    continue
+                raise
+            except Exception as exc:
+                last_exc = exc
+                if attempt < 3:
+                    time.sleep(2 ** attempt)
+                    continue
+                raise
+        else:
+            raise RuntimeError(f"judge failed after 3 attempts: {last_exc}") from last_exc
+
         content = data["choices"][0]["message"]["content"]
         match = re.search(r"\{.*\}", content, re.DOTALL)
         if not match:
