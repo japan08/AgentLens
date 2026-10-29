@@ -1,4 +1,4 @@
-"""Load recorded agent runs (\"traces\") from a JSONL file, or collect them
+"""Load recorded agent runs ("traces") from a JSONL file, or collect them
 live from an HTTP agent endpoint.
 
 Trace format (one JSON object per line)::
@@ -13,22 +13,11 @@ Trace format (one JSON object per line)::
 
 A trace is matched to a case by ``id`` when present, otherwise by the
 exact ``input``/``utterance`` text.
-
-Enhancement changes (v0.3):
-- ``run_cases_against_endpoint`` is now fault-tolerant: per-request errors
-  produce a sentinel trace instead of crashing the whole evaluation.
-- Supports concurrent requests via ``concurrency`` parameter to speed up
-  large test suites against live agent endpoints.
-- ``normalize_trace`` guards against ``None`` args on tool calls, normalising
-  them to ``{}`` so scoring never throws a TypeError.
 """
 from __future__ import annotations
 
 import json
-import sys
-import urllib.error
 import urllib.request
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 
@@ -44,9 +33,8 @@ def _norm_tool(entry):
                     args = json.loads(args)
                 except json.JSONDecodeError:
                     args = {"_raw": args}
-            return {"name": fn.get("name", ""), "args": args if isinstance(args, dict) else {}}
-        raw_args = entry.get("args") or {}
-        return {"name": entry.get("name", ""), "args": raw_args if isinstance(raw_args, dict) else {}}
+            return {"name": fn.get("name", ""), "args": args}
+        return {"name": entry.get("name", ""), "args": entry.get("args") or {}}
     return {"name": str(entry), "args": {}}
 
 
@@ -101,29 +89,6 @@ def normalize_trace(raw: dict) -> dict:
     }
 
 
-def _error_trace(case: dict, error: str) -> dict:
-    """Produce a sentinel trace for a case that could not be fetched.
-
-    This trace will score as a missing-trace failure with a clear error
-    message rather than crashing the whole evaluation run.
-    """
-    return {
-        "id": case["id"],
-        "input": case["input"],
-        "intent": None,
-        "flow": None,
-        "tools": [],
-        "answer": "",
-        "latency_ms": None,
-        "cost_usd": None,
-        "escalated": None,
-        "judge_score": None,
-        "judge_rationale": None,
-        "turns": [],
-        "_error": error,
-    }
-
-
 def load_traces(path) -> list[dict]:
     path = Path(path)
     traces = []
@@ -155,100 +120,24 @@ def find_trace(index: dict, case: dict):
     return index.get(f"id:{case['id']}") or index.get(f"in:{case['input']}")
 
 
-def _fetch_one(case: dict, url: str, timeout: int) -> dict:
-    """POST a single case to the agent endpoint and return its normalised trace.
-
-    Returns an error sentinel trace on any failure so the caller can continue
-    evaluating remaining cases.
-    """
-    payload = json.dumps({"id": case["id"], "input": case["input"]}).encode("utf-8")
-    req = urllib.request.Request(
-        url, data=payload, headers={"Content-Type": "application/json"}, method="POST"
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            status = resp.status
-            raw_bytes = resp.read()
-    except urllib.error.HTTPError as exc:
-        return _error_trace(case, f"HTTP {exc.code} from agent endpoint: {exc.reason}")
-    except urllib.error.URLError as exc:
-        return _error_trace(case, f"connection error reaching agent endpoint: {exc.reason}")
-    except TimeoutError:
-        return _error_trace(case, f"agent endpoint timed out after {timeout}s")
-    except Exception as exc:  # noqa: BLE001
-        return _error_trace(case, f"unexpected error: {exc}")
-
-    if status != 200:
-        return _error_trace(case, f"agent returned HTTP {status}")
-
-    try:
-        raw = json.loads(raw_bytes.decode("utf-8"))
-    except json.JSONDecodeError as exc:
-        return _error_trace(case, f"agent returned invalid JSON: {exc}")
-
-    trace = normalize_trace(raw)
-    if not trace.get("id"):
-        trace["id"] = case["id"]
-    return trace
-
-
-def run_cases_against_endpoint(
-    cases: list[dict],
-    url: str,
-    timeout: int = 60,
-    concurrency: int = 1,
-) -> list[dict]:
-    """POST each case to an agent endpoint and collect its trace.
+def run_cases_against_endpoint(cases: list[dict], url: str, timeout: int = 60) -> list[dict]:
+    """POST each case input to an agent endpoint and collect its trace.
 
     The endpoint receives ``{"id": ..., "input": ...}`` and should return
     a JSON trace object (see module docstring). This keeps the harness
     agent-agnostic: any framework can be evaluated through one adapter.
-
-    Args:
-        cases:       Normalised case dicts from ``load_cases``.
-        url:         HTTP(S) endpoint URL.
-        timeout:     Per-request timeout in seconds (default 60).
-        concurrency: Number of parallel requests (default 1 = sequential).
-                     Increase to speed up evaluation against fast agents.
-                     Use ``--concurrency`` on the CLI.
-
-    Returns:
-        List of trace dicts in the **same order** as ``cases``. Failed
-        requests produce an error-sentinel trace instead of raising so that
-        the rest of the evaluation can still complete.
     """
-    if concurrency < 1:
-        concurrency = 1
-
-    # Sequential path (default) — preserves order, no threading overhead.
-    if concurrency == 1:
-        traces = []
-        for idx, case in enumerate(cases, 1):
-            trace = _fetch_one(case, url, timeout)
-            if "_error" in trace:
-                print(
-                    f"  [warn] case {case['id']!r} ({idx}/{len(cases)}): {trace['_error']}",
-                    file=sys.stderr,
-                )
-            traces.append(trace)
-        return traces
-
-    # Concurrent path — preserves original case order in output.
-    results: dict[int, dict] = {}
-    with ThreadPoolExecutor(max_workers=concurrency) as pool:
-        futures = {pool.submit(_fetch_one, case, url, timeout): i for i, case in enumerate(cases)}
-        for future in as_completed(futures):
-            idx = futures[future]
-            case = cases[idx]
-            try:
-                trace = future.result()
-            except Exception as exc:  # noqa: BLE001
-                trace = _error_trace(case, f"unexpected executor error: {exc}")
-            if "_error" in trace:
-                print(
-                    f"  [warn] case {case['id']!r}: {trace['_error']}",
-                    file=sys.stderr,
-                )
-            results[idx] = trace
-
-    return [results[i] for i in range(len(cases))]
+    traces = []
+    for case in cases:
+        payload = json.dumps({"id": case["id"], "input": case["input"]}).encode("utf-8")
+        req = urllib.request.Request(
+            url, data=payload, headers={"Content-Type": "application/json"}, method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = json.loads(resp.read().decode("utf-8"))
+        trace = normalize_trace(raw)
+        trace.setdefault("id", case["id"])
+        if not trace.get("id"):
+            trace["id"] = case["id"]
+        traces.append(trace)
+    return traces

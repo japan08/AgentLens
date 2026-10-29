@@ -37,25 +37,6 @@ def compare_reports(old: dict, new: dict) -> dict:
         if not old_cases[cid]["passed"] and new_cases[cid]["passed"]
     )
 
-    # Per-case check diffs: which specific check newly failed or newly passed?
-    check_diffs: dict[str, dict] = {}
-    for cid in old_cases.keys() & new_cases.keys():
-        old_checks = old_cases[cid].get("checks", {})
-        new_checks = new_cases[cid].get("checks", {})
-        newly_failed_checks = [
-            k for k in old_checks
-            if old_checks.get(k) is not False and new_checks.get(k) is False
-        ]
-        newly_fixed_checks = [
-            k for k in new_checks
-            if old_checks.get(k) is False and new_checks.get(k) is not False
-        ]
-        if newly_failed_checks or newly_fixed_checks:
-            check_diffs[cid] = {
-                "newly_failed": newly_failed_checks,
-                "newly_fixed": newly_fixed_checks,
-            }
-
     metric_deltas = {}
     for m in METRICS:
         o, n = old["summary"].get(m), new["summary"].get(m)
@@ -67,7 +48,6 @@ def compare_reports(old: dict, new: dict) -> dict:
         "success_rate_delta": metric_deltas.get("task_success_rate", {}).get("delta"),
         "newly_failing": newly_failing,
         "newly_passing": newly_passing,
-        "check_diffs": check_diffs,
         "added_cases": sorted(new_cases.keys() - old_cases.keys()),
         "removed_cases": sorted(old_cases.keys() - new_cases.keys()),
     }
@@ -137,16 +117,4 @@ def render_comparison(comp: dict) -> str:
     if not comp["newly_failing"] and not comp["newly_passing"]:
         lines.append("No case changed pass/fail status.")
     lines.append("")
-    # Per-case check diffs (new in v0.3)
-    check_diffs = comp.get("check_diffs", {})
-    if check_diffs:
-        lines.append("## Check-level changes")
-        lines.append("")
-        lines.append("| Case | Newly failing checks | Newly fixed checks |")
-        lines.append("|---|---|---|")
-        for cid, diff in sorted(check_diffs.items()):
-            failed = ", ".join(diff["newly_failed"]) or "—"
-            fixed = ", ".join(diff["newly_fixed"]) or "—"
-            lines.append(f"| {cid} | {failed} | {fixed} |")
-        lines.append("")
     return "\n".join(lines)

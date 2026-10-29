@@ -1,5 +1,10 @@
 # AgentLens — evaluate AI agents on what actually matters
 
+[![CI](https://github.com/japan08/AgentLens/actions/workflows/ci.yml/badge.svg)](https://github.com/japan08/AgentLens/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![Dependencies](https://img.shields.io/badge/dependencies-none-success)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 > Most agent demos fail silently: the answer *sounds* right while the task
 > quietly fails. AgentLens scores an agent on **task success** — the right
 > intent, the right tools with the right arguments in the right order, no
@@ -8,6 +13,16 @@
 A small, dependency-free Python harness (standard library only) that turns
 agent evaluation into a repeatable, CI-gateable check — the same discipline
 as unit tests, for systems that talk *and* act.
+
+## Dashboard
+
+Every run produces a visual report — explore it with the zero-build dashboard
+in [`frontend/`](frontend/index.html) (also in [`docs/`](docs/index.html) for
+GitHub Pages). Drop any AgentLens `report.json` onto the page to inspect it:
+metric cards, success-by-tag and failure-breakdown charts, and a filterable
+case table with check-level detail.
+
+![AgentLens dashboard](docs/dashboard.png)
 
 ## Why I built this
 

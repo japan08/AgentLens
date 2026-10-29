@@ -44,11 +44,7 @@ def cmd_demo(args) -> int:
 def cmd_run(args) -> int:
     cases = load_cases(args.cases)
     if args.endpoint:
-        traces = run_cases_against_endpoint(
-            cases, args.endpoint,
-            timeout=args.timeout,
-            concurrency=args.concurrency,
-        )
+        traces = run_cases_against_endpoint(cases, args.endpoint, timeout=args.timeout)
         source = f"endpoint {args.endpoint}"
     elif args.traces:
         traces = load_traces(args.traces)
@@ -133,7 +129,6 @@ def main(argv=None) -> int:
     p_run.add_argument("--traces", help="JSONL file of recorded agent traces")
     p_run.add_argument("--endpoint", help="HTTP endpoint that accepts {id, input} and returns a trace JSON")
     p_run.add_argument("--timeout", type=int, default=60, help="Per-request timeout for --endpoint (seconds)")
-    p_run.add_argument("--concurrency", type=int, default=1, help="Parallel requests for --endpoint (default: 1 = sequential)")
     p_run.add_argument("--out", default="reports/run", help="Output directory for reports")
     p_run.add_argument("--min-success", type=float, default=None, help="Exit 1 if task success rate is below this percent (CI gate)")
     p_run.add_argument("--judge", choices=["none", "heuristic", "openai"], default="none",
