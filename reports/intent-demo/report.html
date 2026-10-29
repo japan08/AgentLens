@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Agent Evaluation Report</title>
+<style>
+body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 900px; padding: 0 1rem; color: #1f1f1f; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; vertical-align: top; font-size: 14px; }
+th { background: #f4f6f4; }
+.metric { display: inline-block; margin: 0 1.2rem 0.6rem 0; }
+.metric b { font-size: 1.3rem; display: block; }
+</style></head><body>
+<h1>Agent Evaluation Report</h1>
+<p>Generated 2026-10-29T16:41:52+00:00 · dataset: examples/intent_cases.jsonl</p>
+<div>
+<span class="metric"><b>85.71%</b>task success</span>
+<span class="metric"><b>100.0%</b>intent accuracy</span>
+<span class="metric"><b>—</b>tool sequence</span>
+<span class="metric"><b>—</b>tool arguments</span>
+<span class="metric"><b>233.6 ms</b>avg latency</span>
+<span class="metric"><b>—</b>cost / success</span>
+</div>
+<h2>By tag</h2>
+<table><tr><th>Tag</th><th>Passed</th><th>Success rate</th></tr><tr><td>untagged</td><td>6/7</td><td><div style='background:#e6f4ea;height:12px;width:85.71%;min-width:2px'></div>85.71%</td></tr></table>
+<h2>Failure breakdown</h2>
+<table><tr><th>Check</th><th>Failures</th></tr><tr><td>forbidden_intent</td><td>1</td></tr></table>
+<h2>Cases</h2>
+<table><tr><th>Case</th><th>Result</th><th>Input</th><th>Failure reasons</th></tr><tr><td>case-001</td><td><span style="color:#137333">✅ pass</span></td><td>hi</td><td></td></tr><tr><td>case-002</td><td><span style="color:#137333">✅ pass</span></td><td>what services do you offer</td><td></td></tr><tr><td>case-003</td><td><span style="color:#137333">✅ pass</span></td><td>how much does it cost</td><td></td></tr><tr><td>case-004</td><td><span style="color:#137333">✅ pass</span></td><td>can I see a demo</td><td></td></tr><tr><td>case-005</td><td><span style="color:#137333">✅ pass</span></td><td>talk to a human</td><td></td></tr><tr><td>case-006</td><td><span style="color:#137333">✅ pass</span></td><td>I want to place an order</td><td></td></tr><tr><td>case-007</td><td><span style="color:#b3261e">❌ fail</span></td><td>track my order</td><td>forbidden intent returned: track_order</td></tr></table>
+</body></html>

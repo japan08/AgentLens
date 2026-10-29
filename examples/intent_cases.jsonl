@@ -1,0 +1,7 @@
+{"utterance": "hi", "expected": "greeting"}
+{"utterance": "what services do you offer", "expected": "service_enquiry"}
+{"utterance": "how much does it cost", "expected": "pricing_enquiry"}
+{"utterance": "can I see a demo", "expected": "demo_request", "expect_flow": "get_quote"}
+{"utterance": "talk to a human", "expected": "contact_human", "expect_flow": "book_callback"}
+{"utterance": "I want to place an order", "expected": "any", "expect_not": ["place_order", "track_order"]}
+{"utterance": "track my order", "expected": "any", "expect_not": ["place_order", "track_order"]}

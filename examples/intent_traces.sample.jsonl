@@ -1,0 +1,7 @@
+{"utterance": "hi", "intent": "greeting", "latency_ms": 210}
+{"utterance": "what services do you offer", "intent": "service_enquiry", "latency_ms": 260}
+{"utterance": "how much does it cost", "intent": "pricing_enquiry", "latency_ms": 240}
+{"utterance": "can I see a demo", "intent": "demo_request", "flow": "get_quote", "latency_ms": 300}
+{"utterance": "talk to a human", "intent": "contact_human", "flow": "book_callback", "latency_ms": 230}
+{"utterance": "I want to place an order", "intent": "fallback", "latency_ms": 190}
+{"utterance": "track my order", "intent": "track_order", "latency_ms": 205}

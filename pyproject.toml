@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentlens"
+version = "0.2.0"
+description = "Evaluate AI agents on task success, tool-call accuracy, escalation behaviour, latency and cost — not just answer quality."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Japan Patel" }]
+keywords = ["ai-agents", "evaluation", "llm", "testing", "rag"]
+dependencies = []
+
+[project.scripts]
+agentlens = "agentlens.cli:main"
+
+[tool.setuptools]
+packages = ["agentlens"]

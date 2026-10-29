@@ -1,0 +1,220 @@
+{
+  "tool": "agentlens",
+  "generated_at": "2026-10-29T16:41:52+00:00",
+  "meta": {
+    "dataset": "examples/intent_cases.jsonl",
+    "source": "traces examples/intent_traces.sample.jsonl"
+  },
+  "summary": {
+    "total_cases": 7,
+    "passed": 6,
+    "failed": 1,
+    "task_success_rate": 85.71,
+    "intent_accuracy": 100.0,
+    "tool_sequence_accuracy": null,
+    "tool_args_accuracy": null,
+    "escalation_accuracy": null,
+    "judge_pass_rate": null,
+    "avg_judge_score": null,
+    "avg_latency_ms": 233.6,
+    "p95_latency_ms": 300,
+    "total_cost_usd": null,
+    "cost_per_success_usd": null,
+    "failure_breakdown": {
+      "forbidden_intent": 1
+    },
+    "by_tag": {
+      "untagged": {
+        "total": 7,
+        "passed": 6,
+        "success_rate": 85.71
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "case-001",
+      "input": "hi",
+      "tags": [],
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "flow": null,
+        "forbidden_intent": null,
+        "tool_sequence": null,
+        "tool_args": null,
+        "forbidden_tools": null,
+        "tool_budget": null,
+        "tool_loop": null,
+        "answer": null,
+        "judge": null,
+        "escalation": null,
+        "latency": null,
+        "cost": null
+      },
+      "reasons": [],
+      "latency_ms": 210,
+      "cost_usd": null,
+      "judge_score": null,
+      "judge_rationale": null
+    },
+    {
+      "id": "case-002",
+      "input": "what services do you offer",
+      "tags": [],
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "flow": null,
+        "forbidden_intent": null,
+        "tool_sequence": null,
+        "tool_args": null,
+        "forbidden_tools": null,
+        "tool_budget": null,
+        "tool_loop": null,
+        "answer": null,
+        "judge": null,
+        "escalation": null,
+        "latency": null,
+        "cost": null
+      },
+      "reasons": [],
+      "latency_ms": 260,
+      "cost_usd": null,
+      "judge_score": null,
+      "judge_rationale": null
+    },
+    {
+      "id": "case-003",
+      "input": "how much does it cost",
+      "tags": [],
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "flow": null,
+        "forbidden_intent": null,
+        "tool_sequence": null,
+        "tool_args": null,
+        "forbidden_tools": null,
+        "tool_budget": null,
+        "tool_loop": null,
+        "answer": null,
+        "judge": null,
+        "escalation": null,
+        "latency": null,
+        "cost": null
+      },
+      "reasons": [],
+      "latency_ms": 240,
+      "cost_usd": null,
+      "judge_score": null,
+      "judge_rationale": null
+    },
+    {
+      "id": "case-004",
+      "input": "can I see a demo",
+      "tags": [],
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "flow": true,
+        "forbidden_intent": null,
+        "tool_sequence": null,
+        "tool_args": null,
+        "forbidden_tools": null,
+        "tool_budget": null,
+        "tool_loop": null,
+        "answer": null,
+        "judge": null,
+        "escalation": null,
+        "latency": null,
+        "cost": null
+      },
+      "reasons": [],
+      "latency_ms": 300,
+      "cost_usd": null,
+      "judge_score": null,
+      "judge_rationale": null
+    },
+    {
+      "id": "case-005",
+      "input": "talk to a human",
+      "tags": [],
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "flow": true,
+        "forbidden_intent": null,
+        "tool_sequence": null,
+        "tool_args": null,
+        "forbidden_tools": null,
+        "tool_budget": null,
+        "tool_loop": null,
+        "answer": null,
+        "judge": null,
+        "escalation": null,
+        "latency": null,
+        "cost": null
+      },
+      "reasons": [],
+      "latency_ms": 230,
+      "cost_usd": null,
+      "judge_score": null,
+      "judge_rationale": null
+    },
+    {
+      "id": "case-006",
+      "input": "I want to place an order",
+      "tags": [],
+      "passed": true,
+      "checks": {
+        "intent": null,
+        "flow": null,
+        "forbidden_intent": true,
+        "tool_sequence": null,
+        "tool_args": null,
+        "forbidden_tools": null,
+        "tool_budget": null,
+        "tool_loop": null,
+        "answer": null,
+        "judge": null,
+        "escalation": null,
+        "latency": null,
+        "cost": null
+      },
+      "reasons": [],
+      "latency_ms": 190,
+      "cost_usd": null,
+      "judge_score": null,
+      "judge_rationale": null
+    },
+    {
+      "id": "case-007",
+      "input": "track my order",
+      "tags": [],
+      "passed": false,
+      "checks": {
+        "intent": null,
+        "flow": null,
+        "forbidden_intent": false,
+        "tool_sequence": null,
+        "tool_args": null,
+        "forbidden_tools": null,
+        "tool_budget": null,
+        "tool_loop": null,
+        "answer": null,
+        "judge": null,
+        "escalation": null,
+        "latency": null,
+        "cost": null
+      },
+      "reasons": [
+        "forbidden intent returned: track_order"
+      ],
+      "latency_ms": 205,
+      "cost_usd": null,
+      "judge_score": null,
+      "judge_rationale": null
+    }
+  ]
+}
