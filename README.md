@@ -5,6 +5,8 @@
 ![Dependencies](https://img.shields.io/badge/dependencies-none-success)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+**Test. Benchmark. Debug. Trust your AI agents.**
+
 > Most agent demos fail silently: the answer *sounds* right while the task
 > quietly fails. AgentLens scores an agent on **task success** — the right
 > intent, the right tools with the right arguments in the right order, no
@@ -58,13 +60,15 @@ Every run writes `report.json`, `report.md` and a self-contained
 
 ## Dashboard (frontend)
 
-`frontend/index.html` is a zero-build web dashboard for exploring reports:
-metric cards, success-by-tag bars, a failure breakdown, and a filterable
-case table that shows exactly which checks failed and why. It ships with
-the demo report embedded — and you can drag-and-drop (or load) **any**
-AgentLens `report.json` to inspect your own runs. No server, no build
-step: open the file, or serve the folder with GitHub Pages (a copy lives
-in `docs/` for that).
+`frontend/index.html` is a zero-build web dashboard for exploring reports,
+with five tabs: **Overview** (metric cards, success-by-tag, failure
+breakdown, stability), **Cases** (filterable table with structured
+failure diagnosis), **Trajectories** (step-by-step execution timeline per
+case), **Compare** (load a second report for deltas) and **Security**
+(safety-violation explorer). It ships with the demo report embedded — and
+you can drag-and-drop (or load) **any** AgentLens `report.json` to inspect
+your own runs. No server, no build step: open the file, or serve the
+folder with GitHub Pages (a copy lives in `docs/` for that).
 
 ## What gets checked
 
@@ -82,6 +86,9 @@ in `docs/` for that).
 | **Tool budget / loops** | Runaway tool usage and repeated identical calls (agent loops) |
 | **LLM-as-judge** | Open-ended answers scored against free-text criteria |
 | **Multi-turn** | Whole conversations: per-turn intent + full trajectory |
+| **Step efficiency** | Redundant repeated calls and `max_steps` budgets |
+| **Safety scans** | PII (email/phone/card/API key) and system-prompt-leak patterns in answers, when a case opts in |
+| **RAG metrics** | Faithfulness, answer relevancy, context recall/precision (transparent word-overlap heuristics — see METRICS.md) |
 
 Metrics are also broken down **per tag**, so you can see that billing cases
 pass at 95% while handover cases sit at 60%.
@@ -147,31 +154,68 @@ python -m unittest discover -s tests -v
 Covers dataset normalisation, every scoring check, regression comparison,
 and the live HTTP runner against a local test server.
 
-## Advanced features (v0.2)
+## Advanced features
+
+**v0.3 — execution intelligence, RAG, security, integrations**
+
+- **Trajectories & diagnosis** — every case carries an ordered execution
+  trajectory and structured failure diagnosis (expected vs observed, with
+  a hint) in reports and the dashboard.
+- **Step efficiency** — redundant-call counting, `max_steps` budgets,
+  `expect_efficient` cases.
+- **Repeated-run stability** — `run --repeat N` against a live endpoint
+  reports per-case pass rates and flags flaky cases.
+- **RAG evaluation** — `rag` blocks with faithfulness, relevancy and
+  context recall/precision thresholds (`examples/rag_cases.jsonl`).
+- **Security suite** — `forbid_pii` / `forbid_leak` answer scans and a
+  sample red-team dataset (`examples/security_cases.jsonl`).
+- **`bench` command** — compare models/prompts/configurations on one
+  dataset, side by side.
+- **`generate` command** — synthetic candidate cases (injection, shout,
+  multi-intent, politeness variants), always stamped `needs_review`.
+- **Judge quality controls** — judge prompt version in every report;
+  `cross_check` flags recorded-vs-live judge disagreements.
+- **`convert` command** — LangChain-style records and OpenTelemetry spans
+  become AgentLens traces; MCP tool names work natively
+  (`examples/mcp_cases.jsonl`).
+- **SDK + HTTP API** — `from agentlens import evaluate`, and
+  `python -m agentlens serve` for a localhost `POST /evaluate` API.
+- **`monitor` command** — appends run history and alerts (exit 2) when
+  task success drops below a threshold or vs the previous run.
+
+**v0.2**
 
 - **Multi-turn cases** — per-turn intents and the full tool trajectory are
   scored; escalation counts if it happens on any turn.
 - **Tool-matching modes** — `exact` sequence, or `subsequence` when extra
   housekeeping calls are fine; plus a **tool-call budget** and a **loop
   guard** (same call 3+ times in a row = agent loop).
-- **LLM-as-judge** — cases can carry a `judge` block with free-text criteria
-  and a minimum score. Use a recorded `judge_score`, the built-in offline
-  heuristic judge, or any OpenAI-compatible endpoint as the judge
+- **LLM-as-judge** — recorded `judge_score`, the built-in offline
+  heuristic judge, or any OpenAI-compatible endpoint
   (`--judge openai --judge-endpoint ... --judge-model ...`). Spot-check
   judged cases by hand — judge scores drift.
-- **`validate` command** — catches duplicate case ids, typos in field
-  names, empty inputs and unmatched traces *before* they look like agent
+- **`validate` command** — catches duplicate case ids, field-name typos,
+  empty inputs and unmatched traces *before* they look like agent
   failures.
-- **`trend` command** — tabulates metrics across many run reports so score
-  movement version to version is visible at a glance.
-- **Failure breakdown** — every report groups failures by check type, so
-  you fix the biggest failure class first.
+- **`trend` command** — metrics across many run reports at a glance.
+- **Failure breakdown** — failures grouped by check type in every report.
+
+## Documentation
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — components, data flow, design decisions
+- [METRICS.md](METRICS.md) — every metric defined, with limitations
+- [BENCHMARKS.md](BENCHMARKS.md) — reproducible sample results and methodology
+- [SECURITY.md](SECURITY.md) — security model and boundaries
+- [CONTRIBUTING.md](CONTRIBUTING.md) — setup and ground rules
+- [CHANGELOG.md](CHANGELOG.md) — what changed, version by version
 
 ## Roadmap
 
-- Pluggable runners for popular agent frameworks
+- Live adapters for agent frameworks (converters for recorded traces
+  already exist — see `convert`)
 - Baseline trending wired into git history / CI artifacts
-- Flakiness detection across repeated runs of the same dataset
+- Team features: shared storage, access control, continuous production
+  sampling
 
 ## License
 

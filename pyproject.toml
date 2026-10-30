@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentlens"
-version = "0.2.0"
+version = "0.3.0"
 description = "Evaluate AI agents on task success, tool-call accuracy, escalation behaviour, latency and cost — not just answer quality."
 readme = "README.md"
 requires-python = ">=3.10"

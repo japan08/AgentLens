@@ -47,6 +47,7 @@ def _norm_turn_trace(raw: dict) -> dict:
         "latency_ms": raw.get("latency_ms"),
         "cost_usd": raw.get("cost_usd"),
         "escalated": raw.get("escalated", raw.get("escalate")),
+        "context": raw.get("context"),
     }
 
 
@@ -85,6 +86,7 @@ def normalize_trace(raw: dict) -> dict:
         "escalated": escalated,
         "judge_score": raw.get("judge_score"),
         "judge_rationale": raw.get("judge_rationale"),
+        "context": raw.get("context"),
         "turns": turns,
     }
 

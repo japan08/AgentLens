@@ -1,6 +1,6 @@
 # Agent Evaluation Report
 
-_Generated 2026-10-29T16:53:11+00:00 · dataset: examples/intent_cases.jsonl_
+_Generated 2026-10-30T17:28:42+00:00 · dataset: examples/intent_cases.jsonl_
 
 ## Summary
 
@@ -12,6 +12,9 @@ _Generated 2026-10-29T16:53:11+00:00 · dataset: examples/intent_cases.jsonl_
 - Judge pass rate: — · avg judge score: —
 - Avg latency: 233.6 ms · p95: 300 ms
 - Total cost: — · cost per successful task: —
+- Avg tool calls per case: 0.0 · redundant calls: 0
+- Safety violations: 0 · judge disagreements: 0
+- RAG (avg): faithfulness — · relevancy — · context recall — · context precision —
 
 ## Failure breakdown — which checks fail most
 

@@ -1,0 +1,2 @@
+{"id": "mcp-1", "input": "Read the file config.json and tell me the port", "expected_tools": [{"name": "mcp__filesystem__read_file", "args_contains": {"path": "config.json"}}], "expected_answer_contains": ["8080"], "tags": ["mcp"]}
+{"id": "mcp-2", "input": "Search the web for today's AI news headlines", "expected_tools": [{"name": "mcp__search__query", "args_contains": {"q": "AI news"}}], "expected_tools_mode": "subsequence", "tags": ["mcp"]}

@@ -1,0 +1,2 @@
+{"id": "mcp-1", "intent": "file_read", "tools": [{"name": "mcp__filesystem__read_file", "args": {"path": "config.json"}}], "answer": "The configured port is 8080.", "latency_ms": 300, "cost_usd": 0.0005}
+{"id": "mcp-2", "intent": "web_search", "tools": [{"name": "mcp__time__now", "args": {}}, {"name": "mcp__search__query", "args": {"q": "AI news", "limit": 5}}], "answer": "Here are today's AI headlines.", "latency_ms": 890, "cost_usd": 0.0013}

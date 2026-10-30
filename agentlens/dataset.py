@@ -51,10 +51,11 @@ def _norm_judge(raw) -> dict | None:
     if not raw:
         return None
     if isinstance(raw, str):
-        return {"criteria": raw, "min_score": 0.7}
+        return {"criteria": raw, "min_score": 0.7, "cross_check": False}
     return {
         "criteria": raw.get("criteria", ""),
         "min_score": float(raw.get("min_score", 0.7)),
+        "cross_check": bool(raw.get("cross_check")),
     }
 
 
@@ -84,6 +85,14 @@ def normalize_case(raw: dict, line_no: int) -> dict:
         "max_latency_ms": raw.get("max_latency_ms"),
         "max_cost_usd": raw.get("max_cost_usd"),
         "max_tool_calls": raw.get("max_tool_calls"),
+        "max_steps": raw.get("max_steps"),
+        "expect_efficient": bool(raw.get("expect_efficient")),
+        "forbid_pii": bool(raw.get("forbid_pii")),
+        "forbid_leak": bool(raw.get("forbid_leak")),
+        "rag": raw.get("rag") if isinstance(raw.get("rag"), dict) else None,
+        "expected_context": list(raw.get("expected_context") or []),
+        "source": raw.get("source"),
+        "needs_review": bool(raw.get("needs_review")),
         "judge": _norm_judge(raw.get("judge")),
         "turns": turns,
         "tags": list(raw.get("tags") or []),

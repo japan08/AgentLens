@@ -1,9 +1,11 @@
 {
   "tool": "agentlens",
-  "generated_at": "2026-10-29T16:53:11+00:00",
+  "version": "0.3.0",
+  "generated_at": "2026-10-30T17:28:42+00:00",
   "meta": {
     "dataset": "examples/intent_cases.jsonl",
-    "source": "traces examples/intent_traces.sample.jsonl"
+    "source": "traces examples/intent_traces.sample.jsonl",
+    "judge_prompt_version": "1"
   },
   "summary": {
     "total_cases": 7,
@@ -29,7 +31,15 @@
         "passed": 6,
         "success_rate": 85.71
       }
-    }
+    },
+    "avg_tool_calls": 0.0,
+    "total_redundant_calls": 0,
+    "safety_violations": 0,
+    "judge_disagreements": 0,
+    "avg_rag_faithfulness": null,
+    "avg_rag_relevancy": null,
+    "avg_rag_context_recall": null,
+    "avg_rag_context_precision": null
   },
   "cases": [
     {
@@ -50,13 +60,57 @@
         "judge": null,
         "escalation": null,
         "latency": null,
-        "cost": null
+        "cost": null,
+        "efficiency": null,
+        "pii": null,
+        "leak": null,
+        "rag_faithfulness": null,
+        "rag_relevancy": null,
+        "rag_context_recall": null,
+        "rag_context_precision": null
       },
       "reasons": [],
+      "diagnosis": [],
       "latency_ms": 210,
       "cost_usd": null,
       "judge_score": null,
-      "judge_rationale": null
+      "judge_rationale": null,
+      "judge_second_score": null,
+      "judge_disagreement": null,
+      "tool_calls": 0,
+      "redundant_calls": 0,
+      "trajectory": [
+        {
+          "n": 1,
+          "kind": "input",
+          "label": "user input",
+          "detail": "hi",
+          "status": "info"
+        },
+        {
+          "n": 2,
+          "kind": "intent",
+          "label": "intent: greeting",
+          "detail": "",
+          "status": "ok"
+        },
+        {
+          "n": 3,
+          "kind": "answer",
+          "label": "final answer",
+          "detail": "",
+          "status": "info"
+        },
+        {
+          "n": 4,
+          "kind": "meta",
+          "label": "latency 210 ms",
+          "detail": "",
+          "status": "info"
+        }
+      ],
+      "rag": null,
+      "safety_findings": []
     },
     {
       "id": "case-002",
@@ -76,13 +130,57 @@
         "judge": null,
         "escalation": null,
         "latency": null,
-        "cost": null
+        "cost": null,
+        "efficiency": null,
+        "pii": null,
+        "leak": null,
+        "rag_faithfulness": null,
+        "rag_relevancy": null,
+        "rag_context_recall": null,
+        "rag_context_precision": null
       },
       "reasons": [],
+      "diagnosis": [],
       "latency_ms": 260,
       "cost_usd": null,
       "judge_score": null,
-      "judge_rationale": null
+      "judge_rationale": null,
+      "judge_second_score": null,
+      "judge_disagreement": null,
+      "tool_calls": 0,
+      "redundant_calls": 0,
+      "trajectory": [
+        {
+          "n": 1,
+          "kind": "input",
+          "label": "user input",
+          "detail": "what services do you offer",
+          "status": "info"
+        },
+        {
+          "n": 2,
+          "kind": "intent",
+          "label": "intent: service_enquiry",
+          "detail": "",
+          "status": "ok"
+        },
+        {
+          "n": 3,
+          "kind": "answer",
+          "label": "final answer",
+          "detail": "",
+          "status": "info"
+        },
+        {
+          "n": 4,
+          "kind": "meta",
+          "label": "latency 260 ms",
+          "detail": "",
+          "status": "info"
+        }
+      ],
+      "rag": null,
+      "safety_findings": []
     },
     {
       "id": "case-003",
@@ -102,13 +200,57 @@
         "judge": null,
         "escalation": null,
         "latency": null,
-        "cost": null
+        "cost": null,
+        "efficiency": null,
+        "pii": null,
+        "leak": null,
+        "rag_faithfulness": null,
+        "rag_relevancy": null,
+        "rag_context_recall": null,
+        "rag_context_precision": null
       },
       "reasons": [],
+      "diagnosis": [],
       "latency_ms": 240,
       "cost_usd": null,
       "judge_score": null,
-      "judge_rationale": null
+      "judge_rationale": null,
+      "judge_second_score": null,
+      "judge_disagreement": null,
+      "tool_calls": 0,
+      "redundant_calls": 0,
+      "trajectory": [
+        {
+          "n": 1,
+          "kind": "input",
+          "label": "user input",
+          "detail": "how much does it cost",
+          "status": "info"
+        },
+        {
+          "n": 2,
+          "kind": "intent",
+          "label": "intent: pricing_enquiry",
+          "detail": "",
+          "status": "ok"
+        },
+        {
+          "n": 3,
+          "kind": "answer",
+          "label": "final answer",
+          "detail": "",
+          "status": "info"
+        },
+        {
+          "n": 4,
+          "kind": "meta",
+          "label": "latency 240 ms",
+          "detail": "",
+          "status": "info"
+        }
+      ],
+      "rag": null,
+      "safety_findings": []
     },
     {
       "id": "case-004",
@@ -128,13 +270,57 @@
         "judge": null,
         "escalation": null,
         "latency": null,
-        "cost": null
+        "cost": null,
+        "efficiency": null,
+        "pii": null,
+        "leak": null,
+        "rag_faithfulness": null,
+        "rag_relevancy": null,
+        "rag_context_recall": null,
+        "rag_context_precision": null
       },
       "reasons": [],
+      "diagnosis": [],
       "latency_ms": 300,
       "cost_usd": null,
       "judge_score": null,
-      "judge_rationale": null
+      "judge_rationale": null,
+      "judge_second_score": null,
+      "judge_disagreement": null,
+      "tool_calls": 0,
+      "redundant_calls": 0,
+      "trajectory": [
+        {
+          "n": 1,
+          "kind": "input",
+          "label": "user input",
+          "detail": "can I see a demo",
+          "status": "info"
+        },
+        {
+          "n": 2,
+          "kind": "intent",
+          "label": "intent: demo_request",
+          "detail": "",
+          "status": "ok"
+        },
+        {
+          "n": 3,
+          "kind": "answer",
+          "label": "final answer",
+          "detail": "",
+          "status": "info"
+        },
+        {
+          "n": 4,
+          "kind": "meta",
+          "label": "latency 300 ms",
+          "detail": "",
+          "status": "info"
+        }
+      ],
+      "rag": null,
+      "safety_findings": []
     },
     {
       "id": "case-005",
@@ -154,13 +340,57 @@
         "judge": null,
         "escalation": null,
         "latency": null,
-        "cost": null
+        "cost": null,
+        "efficiency": null,
+        "pii": null,
+        "leak": null,
+        "rag_faithfulness": null,
+        "rag_relevancy": null,
+        "rag_context_recall": null,
+        "rag_context_precision": null
       },
       "reasons": [],
+      "diagnosis": [],
       "latency_ms": 230,
       "cost_usd": null,
       "judge_score": null,
-      "judge_rationale": null
+      "judge_rationale": null,
+      "judge_second_score": null,
+      "judge_disagreement": null,
+      "tool_calls": 0,
+      "redundant_calls": 0,
+      "trajectory": [
+        {
+          "n": 1,
+          "kind": "input",
+          "label": "user input",
+          "detail": "talk to a human",
+          "status": "info"
+        },
+        {
+          "n": 2,
+          "kind": "intent",
+          "label": "intent: contact_human",
+          "detail": "",
+          "status": "ok"
+        },
+        {
+          "n": 3,
+          "kind": "answer",
+          "label": "final answer",
+          "detail": "",
+          "status": "info"
+        },
+        {
+          "n": 4,
+          "kind": "meta",
+          "label": "latency 230 ms",
+          "detail": "",
+          "status": "info"
+        }
+      ],
+      "rag": null,
+      "safety_findings": []
     },
     {
       "id": "case-006",
@@ -180,13 +410,57 @@
         "judge": null,
         "escalation": null,
         "latency": null,
-        "cost": null
+        "cost": null,
+        "efficiency": null,
+        "pii": null,
+        "leak": null,
+        "rag_faithfulness": null,
+        "rag_relevancy": null,
+        "rag_context_recall": null,
+        "rag_context_precision": null
       },
       "reasons": [],
+      "diagnosis": [],
       "latency_ms": 190,
       "cost_usd": null,
       "judge_score": null,
-      "judge_rationale": null
+      "judge_rationale": null,
+      "judge_second_score": null,
+      "judge_disagreement": null,
+      "tool_calls": 0,
+      "redundant_calls": 0,
+      "trajectory": [
+        {
+          "n": 1,
+          "kind": "input",
+          "label": "user input",
+          "detail": "I want to place an order",
+          "status": "info"
+        },
+        {
+          "n": 2,
+          "kind": "intent",
+          "label": "intent: fallback",
+          "detail": "",
+          "status": "ok"
+        },
+        {
+          "n": 3,
+          "kind": "answer",
+          "label": "final answer",
+          "detail": "",
+          "status": "info"
+        },
+        {
+          "n": 4,
+          "kind": "meta",
+          "label": "latency 190 ms",
+          "detail": "",
+          "status": "info"
+        }
+      ],
+      "rag": null,
+      "safety_findings": []
     },
     {
       "id": "case-007",
@@ -206,15 +480,59 @@
         "judge": null,
         "escalation": null,
         "latency": null,
-        "cost": null
+        "cost": null,
+        "efficiency": null,
+        "pii": null,
+        "leak": null,
+        "rag_faithfulness": null,
+        "rag_relevancy": null,
+        "rag_context_recall": null,
+        "rag_context_precision": null
       },
       "reasons": [
         "forbidden intent returned: track_order"
       ],
+      "diagnosis": [],
       "latency_ms": 205,
       "cost_usd": null,
       "judge_score": null,
-      "judge_rationale": null
+      "judge_rationale": null,
+      "judge_second_score": null,
+      "judge_disagreement": null,
+      "tool_calls": 0,
+      "redundant_calls": 0,
+      "trajectory": [
+        {
+          "n": 1,
+          "kind": "input",
+          "label": "user input",
+          "detail": "track my order",
+          "status": "info"
+        },
+        {
+          "n": 2,
+          "kind": "intent",
+          "label": "intent: track_order",
+          "detail": "",
+          "status": "ok"
+        },
+        {
+          "n": 3,
+          "kind": "answer",
+          "label": "final answer",
+          "detail": "",
+          "status": "info"
+        },
+        {
+          "n": 4,
+          "kind": "meta",
+          "label": "latency 205 ms",
+          "detail": "",
+          "status": "info"
+        }
+      ],
+      "rag": null,
+      "safety_findings": []
     }
   ]
 }

@@ -12,6 +12,8 @@ KNOWN_CASE_FIELDS = {
     "forbidden_tools", "expected_answer_contains", "should_escalate",
     "expected_escalation", "max_latency_ms", "max_cost_usd", "max_tool_calls",
     "judge", "turns", "tags",
+    "max_steps", "expect_efficient", "forbid_pii", "forbid_leak",
+    "rag", "expected_context", "source", "needs_review",
 }
 
 

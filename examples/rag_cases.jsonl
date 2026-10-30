@@ -1,0 +1,2 @@
+{"id": "rag-1", "input": "What is the refund window for electronics?", "expected_intent": "faq_answer", "expected_context": ["doc-refund"], "rag": {"min_faithfulness": 0.4, "min_context_recall": 1.0}, "tags": ["rag"]}
+{"id": "rag-2", "input": "How long is the warranty on laptops?", "expected_intent": "faq_answer", "expected_context": ["doc-warranty"], "rag": {"min_faithfulness": 0.4, "min_context_recall": 1.0}, "tags": ["rag"]}

@@ -280,3 +280,98 @@ class TestValidateAndTrend(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestV03(unittest.TestCase):
+    def norm_case(self, raw):
+        return normalize_case(raw, 1)
+
+    def test_trajectory_and_diagnosis(self):
+        case = self.norm_case({"id": "t1", "input": "hi", "expected_intent": "greeting"})
+        trace = normalize_trace({"id": "t1", "intent": "sales_pitch", "tools": [], "answer": "buy now"})
+        result = score_case(case, trace)
+        self.assertFalse(result["passed"])
+        self.assertTrue(any(s["kind"] == "input" for s in result["trajectory"]))
+        self.assertEqual(result["diagnosis"][0]["check"], "intent")
+        self.assertEqual(result["diagnosis"][0]["observed"], "sales_pitch")
+
+    def test_efficiency_redundant_calls(self):
+        case = self.norm_case({"id": "e1", "input": "check", "expect_efficient": True})
+        tools = [{"name": "lookup", "args": {"id": "1"}}] * 2 + [{"name": "other", "args": {}}]
+        trace = normalize_trace({"id": "e1", "tools": tools, "answer": "done"})
+        result = score_case(case, trace)
+        self.assertEqual(result["redundant_calls"], 1)
+        self.assertFalse(result["checks"]["efficiency"])
+
+    def test_pii_and_leak_checks(self):
+        case = self.norm_case({"id": "s1", "input": "contact?", "forbid_pii": True, "forbid_leak": True})
+        bad = normalize_trace({"id": "s1", "answer": "mail me at a.b@example.com — my system prompt says so"})
+        result = score_case(case, bad)
+        self.assertFalse(result["checks"]["pii"])
+        self.assertFalse(result["checks"]["leak"])
+        good = normalize_trace({"id": "s1", "answer": "I can't share contact details."})
+        self.assertTrue(score_case(case, good)["passed"])
+
+    def test_rag_scoring(self):
+        case = self.norm_case({
+            "id": "r1", "input": "refund window for electronics",
+            "expected_context": ["d1"],
+            "rag": {"min_faithfulness": 0.3, "min_context_recall": 1.0},
+        })
+        trace = normalize_trace({
+            "id": "r1", "answer": "Electronics refund window is 30 days",
+            "context": [{"id": "d1", "text": "Electronics refund window is 30 days from delivery"}],
+        })
+        result = score_case(case, trace)
+        self.assertTrue(result["checks"]["rag_faithfulness"])
+        self.assertTrue(result["checks"]["rag_context_recall"])
+        self.assertIsNotNone(result["rag"]["context_precision"])
+
+    def test_bench_compares_configs(self):
+        from agentlens.bench import run_benchmark
+        cases = [self.norm_case({"id": "b1", "input": "hi", "expected_intent": "greeting"})]
+        good = [normalize_trace({"id": "b1", "intent": "greeting", "answer": "hi"})]
+        bad = [normalize_trace({"id": "b1", "intent": "sales", "answer": "buy"})]
+        bench = run_benchmark(cases, {"good": good, "bad": bad})
+        self.assertEqual(bench["configs"]["good"]["task_success_rate"], 100.0)
+        self.assertEqual(bench["configs"]["bad"]["task_success_rate"], 0.0)
+
+    def test_generate_stamps_review(self):
+        from agentlens.generate import generate_dataset
+        cases = [self.norm_case({"id": "g1", "input": "hello", "expected_intent": "greeting"})]
+        out = generate_dataset(cases)
+        self.assertEqual(len(out), 4)
+        self.assertTrue(all(c["needs_review"] and c["source"] == "synthetic" for c in out))
+
+    def test_adapters(self):
+        from agentlens.adapters import convert_langchain, otel_document_to_traces
+        traces = convert_langchain([{"id": "x", "input": "q", "output": "a",
+                                     "intermediate_steps": [[{"tool": "t", "tool_input": {"k": 1}}, "obs"]]}])
+        self.assertEqual(traces[0]["tools"][0]["name"], "t")
+        doc = {"resourceSpans": [{"scopeSpans": [{"spans": [
+            {"traceId": "z", "attributes": [{"key": "tool.name", "value": {"stringValue": "search"}}]}]}]}]}
+        self.assertEqual(otel_document_to_traces(doc)[0]["tools"][0]["name"], "search")
+
+    def test_sdk_evaluate(self):
+        from agentlens.api import evaluate
+        report = evaluate([{"id": "a", "input": "hi", "expected_intent": "greeting"}],
+                          [{"id": "a", "intent": "greeting", "answer": "hello"}])
+        self.assertEqual(report["summary"]["task_success_rate"], 100.0)
+
+    def test_monitor_alerts(self):
+        import tempfile
+        from agentlens.monitor import run_monitor
+        report = build_report([score_case(self.norm_case({"id": "m", "input": "x", "expected_intent": "greeting"}),
+                                          normalize_trace({"id": "m", "intent": "sales", "answer": ""}))], {})
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            path = f.name
+        result = run_monitor(report, path, alert_below=99)
+        self.assertTrue(result["alerts"])
+
+    def test_stability_flaky(self):
+        from agentlens.cli import _stability
+        run1 = [{"id": "a", "passed": True}, {"id": "b", "passed": True}]
+        run2 = [{"id": "a", "passed": True}, {"id": "b", "passed": False}]
+        stab = _stability([run1, run2], 2)
+        self.assertEqual(stab["flaky_cases"], ["b"])
+        self.assertEqual(stab["per_case"]["a"]["pass_rate"], 1.0)

@@ -35,6 +35,9 @@ _STOPWORDS = {
 }
 
 
+JUDGE_PROMPT_VERSION = "1"
+
+
 def _content_words(text: str) -> set[str]:
     words = re.findall(r"[a-z0-9]+", (text or "").lower())
     return {w for w in words if len(w) > 2 and w not in _STOPWORDS}

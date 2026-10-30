@@ -10,10 +10,13 @@ from .scoring import aggregate
 
 
 def build_report(results: list[dict], meta: dict) -> dict:
+    from . import __version__
+    from .judge import JUDGE_PROMPT_VERSION
     return {
         "tool": "agentlens",
+        "version": __version__,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "meta": meta,
+        "meta": {**meta, "judge_prompt_version": JUDGE_PROMPT_VERSION},
         "summary": aggregate(results),
         "cases": results,
     }
@@ -40,6 +43,9 @@ def render_markdown(report: dict) -> str:
         f"- Judge pass rate: {_fmt(s.get('judge_pass_rate'), '%')} · avg judge score: {_fmt(s.get('avg_judge_score'))}",
         f"- Avg latency: {_fmt(s['avg_latency_ms'], ' ms')} · p95: {_fmt(s['p95_latency_ms'], ' ms')}",
         f"- Total cost: {_fmt(s['total_cost_usd'], ' USD')} · cost per successful task: {_fmt(s['cost_per_success_usd'], ' USD')}",
+        f"- Avg tool calls per case: {_fmt(s.get('avg_tool_calls'))} · redundant calls: {_fmt(s.get('total_redundant_calls'))}",
+        f"- Safety violations: {_fmt(s.get('safety_violations'))} · judge disagreements: {_fmt(s.get('judge_disagreements'))}",
+        f"- RAG (avg): faithfulness {_fmt(s.get('avg_rag_faithfulness'))} · relevancy {_fmt(s.get('avg_rag_relevancy'))} · context recall {_fmt(s.get('avg_rag_context_recall'))} · context precision {_fmt(s.get('avg_rag_context_precision'))}",
         "",
     ]
     if s.get("failure_breakdown"):
@@ -61,6 +67,9 @@ def render_markdown(report: dict) -> str:
         lines.append(f"### ❌ {c['id']} — {c['input']}")
         for reason in c["reasons"]:
             lines.append(f"- {reason}")
+        for d in c.get("diagnosis") or []:
+            lines.append(f"  - 🔎 **{d['check']}** — expected: {d['expected']} · observed: {d['observed']}"
+                         + (f" · hint: {d['hint']}" if d.get("hint") else ""))
         lines.append("")
     lines += ["## All cases", "", "| Case | Result | Input |", "|---|---|---|"]
     for c in report["cases"]:
