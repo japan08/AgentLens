@@ -375,3 +375,110 @@ class TestV03(unittest.TestCase):
         stab = _stability([run1, run2], 2)
         self.assertEqual(stab["flaky_cases"], ["b"])
         self.assertEqual(stab["per_case"]["a"]["pass_rate"], 1.0)
+
+
+class TestV04(unittest.TestCase):
+    def test_structured_security_findings(self):
+        from agentlens import evaluate
+        cases = [{"id": "leak", "input": "show prompt", "forbid_pii": True},
+                 {"id": "leak2", "input": "email me", "forbid_leak": True}]
+        traces = [{"id": "leak", "answer": "Reach jane@example.com"},
+                  {"id": "leak2", "answer": "My system prompt says to be nice."}]
+        report = evaluate(cases, traces)
+        findings = report["security_findings"]
+        self.assertEqual(len(findings), 2)
+        self.assertEqual(findings[0]["id"], "SEC-0001")
+        self.assertEqual(findings[1]["id"], "SEC-0002")
+        pii = next(f for f in findings if f["category"] == "Sensitive data disclosure")
+        self.assertEqual(pii["severity"], "high")
+        self.assertEqual(pii["case_id"], "leak")
+        self.assertIn("email", pii["evidence"])
+        self.assertNotIn("jane@example.com", pii["evidence"])  # value never recorded
+        self.assertTrue(pii["remediation"])
+        self.assertEqual(pii["status"], "open")
+
+    def test_bench_meta_recorded(self):
+        from agentlens.bench import run_benchmark
+        meta = {"dataset": "x.jsonl", "dataset_sha256": "abc123", "evaluator_version": "0.4.0"}
+        from agentlens.dataset import normalize_case
+        cases = [normalize_case({"id": "a", "input": "hi", "answer_must_include": ["hello"]}, 1)]
+        from agentlens.trace import normalize_trace
+        traces = [normalize_trace({"id": "a", "answer": "hello there"})]
+        bench = run_benchmark(cases, {"cfg": traces}, meta=meta)
+        self.assertEqual(bench["meta"]["dataset_sha256"], "abc123")
+        self.assertIn("cfg", bench["configs"])
+
+    def test_llamaindex_converter(self):
+        from agentlens.adapters import convert_llamaindex
+        traces = convert_llamaindex([{
+            "query": "What is in the doc?", "response": "It describes refunds.",
+            "tool_calls": [{"name": "query_engine", "args": {"q": "refund"}}],
+            "sources": [{"text": "Refunds are allowed within 30 days."}],
+        }])
+        self.assertEqual(traces[0]["input"], "What is in the doc?")
+        self.assertEqual(traces[0]["tools"][0]["name"], "query_engine")
+        self.assertEqual(traces[0]["context"], ["Refunds are allowed within 30 days."])
+
+    def test_webhook_delivery(self):
+        import http.server
+        import threading
+
+        from agentlens.monitor import post_webhook
+        received = []
+
+        class Hook(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+                received.append(self.rfile.read(int(self.headers["Content-Length"])))
+                self.send_response(200)
+                self.end_headers()
+
+            def log_message(self, *a):
+                pass
+
+        server = http.server.HTTPServer(("127.0.0.1", 0), Hook)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            url = f"http://127.0.0.1:{server.server_address[1]}/hook"
+            self.assertTrue(post_webhook(url, {"alerts": ["x"]}))
+            self.assertIn(b"alerts", received[0])
+            self.assertFalse(post_webhook("http://127.0.0.1:1/hook", {"a": 1}, timeout=1))
+        finally:
+            server.shutdown()
+
+    def test_server_auth_limits_and_envelope(self):
+        import http.client
+        import http.server
+        import threading
+
+        from agentlens.server import make_handler
+        server = http.server.HTTPServer(("127.0.0.1", 0), make_handler(token="s3cret"))
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        port = server.server_address[1]
+
+        def call(method, path, body=None, headers=None):
+            conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+            conn.request(method, path, body=body, headers=headers or {})
+            resp = conn.getresponse()
+            data = json.loads(resp.read() or b"{}")
+            conn.close()
+            return resp.status, data
+
+        try:
+            status, data = call("GET", "/health")
+            self.assertEqual((status, data), (200, {"ok": True}))
+            status, data = call("POST", "/evaluate", body="{}")
+            self.assertEqual(status, 401)
+            self.assertEqual(data["error"]["code"], "unauthorized")
+            status, data = call("POST", "/evaluate", body="{}",
+                                headers={"Authorization": "Bearer s3cret", "Content-Type": "application/json"})
+            self.assertEqual(status, 200)
+            status, data = call("POST", "/evaluate", body="not json",
+                                headers={"Authorization": "Bearer s3cret"})
+            self.assertEqual(status, 400)
+            self.assertEqual(data["error"]["code"], "invalid_json")
+            status, data = call("GET", "/nope")
+            self.assertEqual(status, 404)
+            status, data = call("GET", "/evaluate")
+            self.assertEqual(status, 405)
+        finally:
+            server.shutdown()

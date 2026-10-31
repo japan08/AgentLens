@@ -13,13 +13,13 @@ import json
 import sys
 from pathlib import Path
 
-from .adapters import convert_langchain, otel_document_to_traces
+from .adapters import convert_langchain, convert_llamaindex, otel_document_to_traces
 from .bench import render_benchmark, run_benchmark
 from .compare import build_trend, compare_reports, load_report, render_comparison, render_trend
 from .dataset import load_cases
 from .generate import generate_dataset
 from .judge import build_judge
-from .monitor import run_monitor
+from .monitor import post_webhook, run_monitor
 from .report import build_report, write_reports
 from .scoring import score_case
 from .server import serve
@@ -167,7 +167,19 @@ def cmd_bench(args) -> int:
             return 2
         name, path = spec.split("=", 1)
         configs[name] = load_traces(path)
-    bench = run_benchmark(cases, configs)
+    import hashlib
+    from . import __version__
+    from datetime import datetime, timezone
+    dataset_bytes = Path(args.cases).read_bytes()
+    meta = {
+        "dataset": str(args.cases),
+        "dataset_sha256": hashlib.sha256(dataset_bytes).hexdigest(),
+        "evaluator_version": __version__,
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "configs": sorted(configs),
+        "note": "All configurations scored on the identical dataset above with the same evaluator version — comparisons are controlled.",
+    }
+    bench = run_benchmark(cases, configs, meta=meta)
     text = render_benchmark(bench)
     print(text)
     if args.out:
@@ -195,6 +207,9 @@ def cmd_convert(args) -> int:
     if args.format == "langchain":
         records = raw if isinstance(raw, list) else [raw]
         traces = convert_langchain(records)
+    elif args.format == "llamaindex":
+        records = raw if isinstance(raw, list) else [raw]
+        traces = convert_llamaindex(records)
     else:  # otel
         traces = otel_document_to_traces(raw)
     from .trace import normalize_trace
@@ -227,6 +242,12 @@ def cmd_monitor(args) -> int:
     print(f"Monitor: task success {entry['task_success_rate']}% ({entry['passed']}/{entry['total_cases']}) — recorded to {args.history}")
     for alert in result["alerts"]:
         print(f"ALERT: {alert}", file=sys.stderr)
+    if result["alerts"] and getattr(args, "webhook", None):
+        payload = {"source": "agentlens-monitor", "alerts": result["alerts"], "entry": result["entry"]}
+        if post_webhook(args.webhook, payload):
+            print(f"Alert webhook delivered to {args.webhook}")
+        else:
+            print(f"WARNING: alert webhook to {args.webhook} failed", file=sys.stderr)
     return 2 if result["alerts"] else 0
 
 
@@ -265,7 +286,7 @@ def main(argv=None) -> int:
     p_gen.set_defaults(func=cmd_generate)
 
     p_conv = sub.add_parser("convert", help="Convert LangChain-style records or OpenTelemetry spans into AgentLens traces")
-    p_conv.add_argument("--format", choices=["langchain", "otel"], required=True)
+    p_conv.add_argument("--format", choices=["langchain", "llamaindex", "otel"], required=True)
     p_conv.add_argument("--in", dest="infile", required=True)
     p_conv.add_argument("--out", required=True, help="Output traces JSONL path")
     p_conv.set_defaults(func=cmd_convert)
@@ -283,6 +304,7 @@ def main(argv=None) -> int:
     p_mon.add_argument("--history", default="reports/monitor-history.jsonl")
     p_mon.add_argument("--alert-below", type=float, default=None, help="Alert (exit 2) if task success falls below this percent")
     p_mon.add_argument("--max-drop", type=float, default=None, help="Alert (exit 2) if task success drops more than this many points vs the previous run")
+    p_mon.add_argument("--webhook", default=None, help="Also POST alert payloads as JSON to this URL when alerts fire")
     p_mon.set_defaults(func=cmd_monitor)
 
     p_val = sub.add_parser("validate", help="Check a dataset (and optionally traces) for mistakes before running")

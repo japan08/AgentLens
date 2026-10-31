@@ -1,7 +1,7 @@
 {
   "tool": "agentlens",
-  "version": "0.3.0",
-  "generated_at": "2026-10-30T17:28:42+00:00",
+  "version": "0.4.0",
+  "generated_at": "2026-10-30T18:04:12+00:00",
   "meta": {
     "dataset": "examples/intent_cases.jsonl",
     "source": "traces examples/intent_traces.sample.jsonl",
@@ -41,6 +41,7 @@
     "avg_rag_context_recall": null,
     "avg_rag_context_precision": null
   },
+  "security_findings": [],
   "cases": [
     {
       "id": "case-001",

@@ -13,6 +13,9 @@ evaluated.
   spans carry a ``tool.name`` (or ``gen_ai.tool.name``) attribute and
   JSON ``tool.args``; the root span may carry ``agent.input`` /
   ``agent.answer`` / ``agent.intent`` attributes.
+- **LlamaIndex-style records**: objects with ``query`` (or ``input``),
+  ``response`` (or ``output``) and ``tool_calls`` / ``sources`` — the
+  shape a query-engine or agent handler naturally logs.
 - **MCP tools**: no conversion needed — MCP tool names are ordinary
   tool names in an AgentLens trace (see ``examples/mcp_cases.jsonl``).
 """
@@ -93,3 +96,38 @@ def otel_document_to_traces(doc: dict) -> list[dict]:
                     duration_ms = round((end - start) / 1e6, 1)
                     trace["latency_ms"] = max(trace["latency_ms"] or 0, duration_ms)
     return [traces[t] for t in order]
+
+
+def llamaindex_record_to_trace(record: dict) -> dict:
+    """Convert one LlamaIndex-style record (query/response/tool_calls)."""
+    tools = []
+    for call in record.get("tool_calls") or []:
+        if isinstance(call, dict):
+            tools.append({"name": call.get("name") or call.get("tool") or "",
+                          "args": call.get("args") or call.get("tool_kwargs") or {}})
+    context = None
+    sources = record.get("sources") or record.get("source_nodes")
+    if sources:
+        texts = []
+        for node in sources:
+            if isinstance(node, dict):
+                texts.append(str(node.get("text") or node.get("content") or ""))
+            else:
+                texts.append(str(node))
+        context = [x for x in texts if x] or None
+    return {
+        "id": record.get("id"),
+        "input": record.get("query") or record.get("input") or "",
+        "intent": record.get("intent"),
+        "flow": record.get("flow"),
+        "tools": tools,
+        "answer": record.get("response") or record.get("output") or record.get("answer") or "",
+        "latency_ms": record.get("latency_ms"),
+        "cost_usd": record.get("cost_usd"),
+        "escalated": record.get("escalated"),
+        "context": context if context is not None else record.get("context"),
+    }
+
+
+def convert_llamaindex(records: list[dict]) -> list[dict]:
+    return [llamaindex_record_to_trace(r) for r in records]

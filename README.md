@@ -60,15 +60,19 @@ Every run writes `report.json`, `report.md` and a self-contained
 
 ## Dashboard (frontend)
 
-`frontend/index.html` is a zero-build web dashboard for exploring reports,
-with five tabs: **Overview** (metric cards, success-by-tag, failure
-breakdown, stability), **Cases** (filterable table with structured
-failure diagnosis), **Trajectories** (step-by-step execution timeline per
-case), **Compare** (load a second report for deltas) and **Security**
-(safety-violation explorer). It ships with the demo report embedded — and
-you can drag-and-drop (or load) **any** AgentLens `report.json` to inspect
-your own runs. No server, no build step: open the file, or serve the
-folder with GitHub Pages (a copy lives in `docs/` for that).
+`frontend/index.html` is a zero-build web app for exploring reports:
+a collapsible sidebar with **Overview** (KPI cards with stated
+formulas, success-by-tag, failure breakdown, stability), **Traces**
+(search/filter/sort/pagination + per-trace detail, timeline and raw
+JSON), **Evaluations** (case results with structured diagnosis),
+**Experiments** (bench results with reproducibility metadata, or a
+second-report diff), **Security** (structured findings explorer),
+**Analytics** (latency percentiles, cost by tag, failure distribution)
+and **Settings** — with complete dark and light themes. It ships with
+the demo report embedded — and you can drag-and-drop (or load) **any**
+AgentLens `report.json` to inspect your own runs. No server, no build
+step: open the file, or serve the folder with GitHub Pages (a copy
+lives in `docs/` for that).
 
 ## What gets checked
 
@@ -155,6 +159,27 @@ Covers dataset normalisation, every scoring check, regression comparison,
 and the live HTTP runner against a local test server.
 
 ## Advanced features
+
+**v0.4 — production polish: app dashboard, findings, hardening**
+
+- **App-style dashboard** — sidebar navigation, dark + light themes,
+  global trace search, and seven working views (Overview, Traces,
+  Evaluations, Experiments, Security, Analytics, Settings), all fed by
+  the loaded report; KPIs show their formulas and never invent data
+  (tokens read "not recorded" — traces don't carry token counts).
+- **Trace explorer** — filter/sort/paginate traces and inspect checks,
+  diagnosis, timeline and raw JSON per case.
+- **Structured security findings** — every report carries
+  `security_findings` records (id, severity, category, evidence with
+  the sensitive value never recorded, remediation, status).
+- **Reproducible experiments** — `bench` stamps dataset SHA-256 +
+  evaluator version into its output; the dashboard renders it.
+- **Hardened HTTP API** — optional bearer-token auth
+  (`AGENTLENS_API_TOKEN`), 5 MB body limit, consistent error envelope.
+- **More integrations** — LlamaIndex converter, FastAPI example,
+  `monitor --webhook` alert delivery.
+- Audit trail: PROJECT_AUDIT.md, IMPLEMENTATION_PLAN.md,
+  FEATURE_STATUS.md, QA_REPORT.md, RELEASE_NOTES_v0.4.md.
 
 **v0.3 — execution intelligence, RAG, security, integrations**
 

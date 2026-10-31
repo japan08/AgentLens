@@ -9,6 +9,7 @@ into cron or CI for scheduled/production-sample evaluation.
 from __future__ import annotations
 
 import json
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -48,3 +49,23 @@ def run_monitor(report: dict, history_path, *, alert_below: float | None = None,
     with open(history_path, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry) + "\n")
     return {"entry": entry, "previous": last, "alerts": alerts}
+
+
+def post_webhook(url: str, payload: dict, timeout: float = 5.0) -> bool:
+    """POST a JSON payload to a webhook URL. Returns True on a 2xx.
+
+    Used for monitor alerts. Failures return False (and the caller
+    warns) — a dead webhook must never mask the alert itself or crash
+    the monitor run.
+    """
+    try:
+        request = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return 200 <= response.status < 300
+    except Exception:
+        return False

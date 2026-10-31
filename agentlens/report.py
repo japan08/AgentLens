@@ -12,12 +12,33 @@ from .scoring import aggregate
 def build_report(results: list[dict], meta: dict) -> dict:
     from . import __version__
     from .judge import JUDGE_PROMPT_VERSION
+    from .safety import structured_findings
+    findings: list[dict] = []
+    for result in results:
+        findings.extend(structured_findings(result["id"], result.get("safety_findings") or []))
+        if (result.get("checks") or {}).get("forbidden_tools") is False:
+            reason = next((r for r in result.get("reasons") or [] if "forbidden" in r),
+                          "a forbidden tool was called")
+            findings.append({
+                "id": None,
+                "case_id": result["id"],
+                "severity": "high",
+                "category": "Unauthorized tool execution",
+                "description": f"The agent executed a tool the case forbids: {reason}.",
+                "evidence": f"Recorded tool trajectory for case '{result['id']}': {reason}",
+                "component": "agent tool layer",
+                "remediation": "Enforce a server-side tool allowlist per intent/case; never rely on the model alone to avoid forbidden tools.",
+                "status": "open",
+            })
+    for i, finding in enumerate(findings, start=1):
+        finding["id"] = f"SEC-{i:04d}"
     return {
         "tool": "agentlens",
         "version": __version__,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "meta": {**meta, "judge_prompt_version": JUDGE_PROMPT_VERSION},
         "summary": aggregate(results),
+        "security_findings": findings,
         "cases": results,
     }
 

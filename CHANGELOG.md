@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.4.0 — 2026-10-30
+
+Production-polish release, built from a full repository audit
+(PROJECT_AUDIT.md). Zero new dependencies; report format backward
+compatible (new fields are additive).
+
+- **Dashboard rebuilt as an app**: collapsible sidebar, header with
+  breadcrumb + global trace search, design tokens with complete dark
+  and light themes, toasts and error banners. Views: Overview, Traces,
+  Evaluations, Experiments, Security, Analytics, Settings — every one
+  renders real report data with loading/empty/error states.
+- **Trace explorer**: search, status filter, sorting, 25-per-page
+  pagination, and a detail panel with checks, diagnosis, execution
+  timeline and a size-capped raw JSON viewer.
+- **Overview KPIs** all computed from the loaded report, with formulas
+  stated in the UI. Tokens show "not recorded" — traces do not carry
+  token counts, and the KPI refuses to invent them.
+- **Structured security findings**: reports now carry a top-level
+  `security_findings` list — `SEC-0001…` records with severity,
+  category, description, evidence (pattern type only, never the
+  sensitive value), component, remediation and status — covering PII
+  exposure, system-prompt leakage and forbidden-tool execution.
+- **Experiment reproducibility**: `bench` output gains a `meta` block
+  (dataset path + SHA-256, evaluator version, timestamp, config list),
+  rendered by the dashboard's Experiments view alongside the metrics
+  table and per-case matrix.
+- **HTTP API hardening**: optional `AGENTLENS_API_TOKEN` bearer auth,
+  5 MB request limit, consistent error envelope
+  (`{"error": {"code", "message"}}`) with proper 400/401/404/405/413
+  statuses.
+- **Integrations**: LlamaIndex-style record converter
+  (`convert --format llamaindex`), a FastAPI integration example
+  (`examples/fastapi_integration.py`), and `monitor --webhook URL`
+  alert delivery.
+- **Process docs**: PROJECT_AUDIT.md, IMPLEMENTATION_PLAN.md,
+  FEATURE_STATUS.md, RELEASE_NOTES_v0.4.md, QA_REPORT.md.
+- Tests: 35 unit tests (5 new for findings/bench meta/converters/
+  webhook/server hardening). Demo unchanged at 11/14 (78.57%).
+
 ## 0.3.0 — 2026-10-30
 
 Implements the product enhancement blueprint (Phases 1–5, scoped to a

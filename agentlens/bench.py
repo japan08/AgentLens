@@ -23,7 +23,7 @@ _COLUMNS = [
 ]
 
 
-def run_benchmark(cases: list[dict], configs: dict[str, list[dict]]) -> dict:
+def run_benchmark(cases: list[dict], configs: dict[str, list[dict]], meta: dict | None = None) -> dict:
     results = {}
     per_case: dict[str, dict[str, bool]] = {}
     for name, traces in configs.items():
@@ -33,7 +33,7 @@ def run_benchmark(cases: list[dict], configs: dict[str, list[dict]]) -> dict:
         results[name] = report["summary"]
         for row in scored:
             per_case.setdefault(row["id"], {})[name] = row["passed"]
-    return {"configs": results, "per_case": per_case}
+    return {"meta": meta or {}, "configs": results, "per_case": per_case}
 
 
 def render_benchmark(bench: dict) -> str:
